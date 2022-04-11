@@ -14,6 +14,11 @@ Vue.prototype.$http = axios
 
 axios.defaults.baseURL = 'http://localhost:8889/lyq/'
 
+axios.interceptors.request.use(config => {
+    console.log(config)
+    config.headers.Authorization = window.sessionStorage.getItem('token')
+    return config
+})
 
 new Vue({
     router,

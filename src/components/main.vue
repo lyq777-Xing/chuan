@@ -17,7 +17,7 @@
                 <span style="display:block;">修改密码</span>
             </el-dropdown-item>
             <el-dropdown-item divided>
-                    <span style="display:block;">退出</span>
+                    <span style="display:block;" @click="logout">退出</span>
                 </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -76,6 +76,10 @@ export default {
     save(activepath){
       window.sessionStorage.setItem('activepath',activepath)
       this.activepath=activepath
+    },
+    logout(){
+      window.sessionStorage.clear()
+      this.$router.push('/login')
     }
   }
 }

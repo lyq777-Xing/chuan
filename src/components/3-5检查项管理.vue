@@ -216,7 +216,10 @@ export default {
   methods:{
     async getdataList(){
       const {data:res} = await this.$http.get('checkitem/findpage',{params:this.queryInfo})
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取数据失败')
       }
       console.log(res);
@@ -237,7 +240,10 @@ export default {
       this.$refs.dataAddForm.validate(async valid=>{
           if(!valid) return
           const {data:res} = await this.$http.post('checkitem/add',this.formData)
-          if(res.flag == false){
+          if(res.flag != true && res.message == "权限不足"){
+            this.$router.push({path:"/main"})
+            return this.$message.error('您暂无权限访问')
+          }else if(res.flag != true && res.message != "权限不足"){
             return this.$message.error('添加数据失败')
           }
           console.log(res);
@@ -249,7 +255,10 @@ export default {
     },
     async handleUpdate(row){
       const {data:res} = await this.$http.get('checkitem/findById?id='+row.id);
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('查询检查项失败')
       }
       this.editFormData = res.data
@@ -260,7 +269,10 @@ export default {
     async handleEdit(){
       const {data:res} = await this.$http.put('checkitem/edit',this.editFormData);
       console.log(res);
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('更新检查项失败')
       }
       this.dialogFormVisible4Edit = false
@@ -278,8 +290,11 @@ export default {
           return this.$message.info('已取消删除')
       }
       const {data:res} = await this.$http.delete('checkitem/delete?id=' + row.id)
-      if(res.flag == false){
-          return this.$message.error('删除失败')
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
+        return this.$message.error('删除失败')
       }
       this.$message.success('删除成功')
       this.getdataList()

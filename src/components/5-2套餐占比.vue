@@ -28,8 +28,11 @@ export default {
     var myChart = echarts.init(document.getElementById('chart2'))
     const {data: res} = await this.$http.get('report/getSetmealReport')
     console.log(res);
-    if(res.flag != true) {
-        return this.$message.error('获取折线图数据失败')
+    if(res.flag != true && res.message == "权限不足"){
+      this.$router.push({path:"/main"})
+      return this.$message.error('您暂无权限访问')
+    }else if(res.flag != true && res.message != "权限不足"){
+      return this.$message.error('获取折线图数据失败')
     }
 
     myChart.setOption(

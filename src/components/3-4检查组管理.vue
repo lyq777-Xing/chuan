@@ -30,7 +30,7 @@
       <el-table-column prop="remark" label="说明" align="center"></el-table-column>
       <el-table-column label="操作" align="center">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
+          <el-button type="primary" size="mini" @click="showUpdateDialog(scope.row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -149,6 +149,86 @@
         <el-button type="primary" @click="handleAdd()">确定</el-button>
       </div>
     </el-dialog>
+    <el-dialog title="编辑检查组" @close="editDialogClosed" :visible.sync="editDialogVisible">
+      <template>
+        <el-tabs v-model="editActiveName" type="card">
+          <el-tab-pane label="基本信息" name="first">
+            <el-form ref="dataEditForm" :model="editfromData" :rules="rules" label-position="right" label-width="100px">
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="编码" prop="code">
+                    <el-input v-model="editfromData.code"/>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="名称" prop="name">
+                    <el-input v-model="editfromData.name"/>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="12">
+                  <el-form-item label="适用性别">
+                    <el-select v-model="editfromData.sex">
+                      <el-option label="不限" value="0"></el-option>
+                      <el-option label="男" value="1"></el-option>
+                      <el-option label="女" value="2"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="助记码">
+                    <el-input v-model="editfromData.helpCode"/>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="24">
+                  <el-form-item label="说明">
+                    <el-input v-model="editfromData.remark" type="textarea"></el-input>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row>
+                  <el-col :span="24">
+                    <el-form-item label="注意事项">
+                      <el-input v-model="editfromData.attention" type="textarea"></el-input>
+                    </el-form-item>
+                  </el-col>
+              </el-row>
+            </el-form>
+          </el-tab-pane>
+          <el-tab-pane label="检查项信息" name="second" >
+            <div class="checkScrol" style="overflow-y:scroll;height: 300px;">
+              <table class="datatable" >
+                <thead>
+                  <tr>
+                    <th>选择</th>
+                    <th>项目编码</th>
+                    <th>项目名称</th>
+                    <th>项目说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="c in tableData" :index="c.id" :key="c.id">
+                    <td>
+                      <input :id="c.id" v-model="checkitemIds" type="checkbox" :value="c.id">
+                    </td>
+                    <td><label :for="c.id">{{c.code}}</label></td>
+                    <td><label :for="c.id">{{c.name}}</label></td>
+                    <td><label :for="c.id">{{c.remark}}</label></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+         </el-tab-pane>
+        </el-tabs>
+      </template>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="editDialogClosed">取消</el-button>
+        <el-button type="primary" @click="handleEdit()">确定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
@@ -173,6 +253,11 @@ export default {
       },
       tableData:[],//新增和编辑表单中对应的检查项列表数据
       checkitemIds:[],//新增和编辑表单中检查项对应的复选框，基于双向绑定可以进行回显和数据提交
+      editDialogVisible:false,
+      editActiveName:'first',
+      editfromData:{},
+      editTableData:[],
+      editCheckitemIds:[]
     }
   },
   created(){
@@ -181,7 +266,10 @@ export default {
   methods:{
     async getdataList(){
       const {data:res} = await this.$http.get('checkgroup/findpage',{params:this.queryInfo})
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取数据失败')
       }
       console.log(res);
@@ -206,7 +294,10 @@ export default {
     },
     async getTableData(){
       const {data:res} = await this.$http.get('checkitem/findAll')
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取数据失败')
       }
       console.log(res);
@@ -230,15 +321,88 @@ export default {
         if(!valid) return
         const {data:res} = await this.$http.post('checkgroup/add/'+this.checkitemIds , this.addfromData)
         console.log(res);
-        if(res.flag == false){
-          return this.$message.error('添加数据失败')
+        if(res.flag != true && res.message == "权限不足"){
+          this.$router.push({path:"/main"})
+          return this.$message.error('您暂无权限访问')
+        }else if(res.flag != true && res.message != "权限不足"){
+          return this.$message.error('创建检查组失败')
         }
         this.getdataList()
         this.addDialogVisible = false
         this.$refs.dataAddForm.resetFields()
         this.$message.success('创建检查组成功')
       })
-    }
+    },
+    editDialogClosed(){
+      console.log(this.checkitemIds);
+      this.editDialogVisible = false
+      this.editActiveName = 'first'
+      this.checkitemIds = [];
+      // 清空复选框中的值
+      // this.$("input")
+      this.editfromData = {};
+      this.$refs.dataEditForm.resetFields()
+    },
+    async handleEdit(){
+      const {data:res} = await this.$http.put(`checkgroup/edit/${this.checkitemIds}`,this.editfromData)
+      console.log(res);
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
+        return this.$message.error('更新数据失败')
+      }
+      this.editDialogVisible = false
+      this.getdataList();
+      this.$refs.dataEditForm.resetFields()
+      this.$message.success('更新检查组成功')
+    },
+    async showUpdateDialog(val){
+      this.getTableData()
+      // 根据id查询检查组
+      const {data:res} = await this.$http.get('checkgroup/findbyid?id='+val.id)
+      console.log(res);
+      if(res.flag == true){
+        this.editfromData = res.data
+        // 根据id查询检查项信息
+        const {data:res2} = await this.$http.get('checkgroup/findCheckItemIdsByCheckGroupId?id='+val.id)
+        console.log(res2);
+        if(res2.flag != true && res2.message == "权限不足"){
+          this.$router.push({path:"/main"})
+          return this.$message.error('您暂无权限访问')
+        }else if(res2.flag != true && res2.message != "权限不足"){
+          return this.$message.error('获取数据失败')
+        }
+        this.checkitemIds = res2.data
+        console.log(this.checkitemIds);
+        this.editDialogVisible = true
+      }else if(res.flag != true && res.message != "权限不足"){
+        return this.$message.error('查询数据失败')
+      }else{
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无访问权限')
+      }
+      console.log(val);
+    },
+    async handleDelete(row){
+      const confirmResult = await this.$confirm('此操作将永久删除该检查项, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+      }).catch(err=>err)
+      if(confirmResult !== 'confirm'){
+          return this.$message.info('已取消删除')
+      }
+      const {data:res} = await this.$http.delete('checkgroup/delete?id=' + row.id)
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
+        return this.$message.error('删除失败')
+      }
+      this.$message.success('删除成功')
+      this.getdataList()
+    },
   }
 }
 </script>

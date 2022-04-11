@@ -189,7 +189,10 @@ export default {
   methods:{
     async getdataList(){
       const {data:res} = await this.$http.get('setmeal/findpage',{params:this.queryInfo})
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取数据失败')
       }
       console.log(res);
@@ -208,7 +211,10 @@ export default {
     },
     async getTableData(){
       const {data:res} = await this.$http.get('checkgroup/findAll')
-      if(res.flag == false){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取数据失败')
       }
       console.log(res);
@@ -244,15 +250,15 @@ export default {
       if(this.checkgroupIds.length == 0){
         return this.$message.error('请先选择检查组')
       }
-      // if(this.imageUrl){
-        // this.addfromData.img = this.imageUrl
-      // }
       this.$refs.dataAddForm.validate(async valid=>{
         if(!valid) return
         const {data:res} = await this.$http.post('setmeal/add/'+this.checkgroupIds , this.addfromData)
         console.log(res);
-        if(res.flag == false){
-          return this.$message.error('添加数据失败')
+        if(res.flag != true && res.message == "权限不足"){
+          this.$router.push({path:"/main"})
+          return this.$message.error('您暂无权限访问')
+        }else if(res.flag != true && res.message != "权限不足"){
+          return this.$message.error('创建套餐失败')
         }
         this.getdataList()
         this.addDialogVisible = false

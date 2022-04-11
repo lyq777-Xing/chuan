@@ -11,7 +11,8 @@
     <div class="app-container">
       <div class="box" style="height: 900px">
         <div class="excelTitle" >
-          <el-button @click="exportExcel">导出Excel</el-button>运营数据统计
+          <el-button @click="exportExcel">导出Excel</el-button>
+          <el-button @click="exportPDF">导出PDF</el-button>运营数据统计
         </div>
         <div class="excelTime">日期：{{reportData.reportDate}}</div>
         <table class="exceTable" cellspacing="0" cellpadding="0">
@@ -99,7 +100,10 @@ export default {
   methods:{
     async getReportData(){
       const {data:res} = await this.$http.get('report/getBusinessReportData')
-      if(res.flag != true){
+      if(res.flag != true && res.message == "权限不足"){
+        this.$router.push({path:"/main"})
+        return this.$message.error('您暂无权限访问')
+      }else if(res.flag != true && res.message != "权限不足"){
         return this.$message.error('获取运营数据失败')
       }
       this.$message.success('获取运营数据成功')
@@ -107,6 +111,9 @@ export default {
     },
     exportExcel(){
         window.location.href = '/report/exportBusinessReport';
+    },
+    exportPDF(){
+        window.location.href = '/report/exportBusinessReport4PDF';
     }
   }
 }
