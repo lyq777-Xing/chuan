@@ -110,7 +110,7 @@ export default {
       this.reportData = res.data
     },
     exportExcel(){
-        window.location.href = '/report/exportBusinessReport';
+        this.$router.push({path:'/report/exportBusinessReport'});
     },
     exportPDF(){
         window.location.href = '/report/exportBusinessReport4PDF';

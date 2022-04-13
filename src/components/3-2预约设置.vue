@@ -11,7 +11,7 @@
     </div>
     <div class="boxMain">
       <el-button class="el-link" style="margin-bottom: 20px;margin-right: 20px" type="primary" download @click="downloadTemplate()">模板下载</el-button>
-      <el-upload action="/ordersetting/upload.do"
+      <el-upload action="http://localhost:8889/lyq/ordersetting/upload"
                 name="excelFile"
                 :show-file-list="false"
                 :on-success="handleSuccess"
@@ -22,30 +22,72 @@
     <div>
       操作说明：请点击"模板下载"按钮获取模板文件，在模板文件中录入预约设置数据后点击"上传文件"按钮上传模板文件。
     </div>
-   <el-calendar>
-    <!-- 这里使用的是 2.5 slot 语法，对于新项目请使用 2.6 slot 语法-->
-    <template
-      slot="dateCell"
-      slot-scope="{date, data}">
-      <p :class="data.isSelected ? 'is-selected' : ''">
-        <!-- {{new Date}} -->
-        {{ data.day.split('-').slice(2).join('') }} {{ data.isSelected ? '✔️' : ''}}
-      </p>
-    </template>
-  </el-calendar>
+    <el-calendar v-model="value" id="calendar">
+        <template
+        slot="dateCell"
+        slot-scope="{date, data}">
+            <div>
+                <div class="calendar-day">{{ data.day.split('-').slice(2).join('-') }}{{ data.isSelected ? '🤢' : ''}}</div>
+                    <div v-for="item in ordersettinglist" :key="item.id">
+                <div v-if="item.orderDate.slice(0,10)==data.day">
+                    <template v-if="item.number > item.reservations">
+                        <div  class="usual">
+                            <p>可预约{{item.number}}人</p>
+                            <p>已预约{{item.reservations}}人</p>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="fulled">
+                            <p>可预约{{item.number}}人</p>
+                            <p>已预约{{item.reservations}}人</p>
+                            <p>已满</p>
+                        </div>
+                    </template>
+                    <template v-if="item.orderDate"></template>
+                    <template><div class="pp"><el-button  type="primary" plain class="btn2">设置</el-button></div></template>
+                </div>
+                </div>
+            </div>
+        </template>
+    </el-calendar>
   </el-card>
 </template>
 <script>
 export default {
-  methods:{
-    downloadTemplate(){
-      const url = "/ordersetting_template.xlsx"
-      window.location.href= url;
+    data(){
+        return{
+            value:new Date(),
+            ordersettinglist:[]
+        }
     },
-    handleOrderSet(){
+    created(){
+        this.getData()
+    },
+    methods:{
+        downloadTemplate(){
+        const url = "/ordersetting_template.xlsx"
+        window.location.href= url;
+        },
+        handleOrderSet(){
 
+        },
+        handleSuccess(){
+            this.$message.success('上传成功') 
+        },
+        beforeUpload(){
+
+        },
+        async getData(){
+            const {data:res}  = await this.$http.get('ordersetting/findall')
+            console.log(res);
+            if(res.flag == true){
+                this.$message.success('查询成功')
+                this.ordersettinglist = res.data
+            }else{
+                this.$message.error('查询失败')
+            }
+        }
     }
-  }
 }
 </script>
 
